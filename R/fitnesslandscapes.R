@@ -61,13 +61,19 @@ PPR_LDA <- function(DF=df, exclude=c("Identifier"), include=FALSE, LDA=FALSE, FI
     PP2 <- c(PP2, dotprod(pprdirections[,"term 2"],DF[row,]))
     if (LDA != FALSE) {
       LD1 <- c(LD1, dotprod(df.lda$scaling[,"LD1"],DF[row,]))
-      if (length(df.lda$scaling)>1) { LD2 <- c(LD2, dotprod(df.lda$scaling[,"LD2"],DF[row,])) }
+      if (length(df.lda$scaling)>1) {
+        LD2 <- c(LD2, dotprod(df.lda$scaling[,"LD2"],DF[row,]))
+      }
     }
   }
   DF$PP1 <- PP1
   DF$PP2 <- PP2
   DF$LD1 <- LD1
-  if (length(df.lda$scaling)>1) { DF$LD2 <- LD2}
+  if (LDA != FALSE) {
+    if (length(df.lda$scaling)>1) {
+      DF$LD2 <- LD2
+    }
+  }
   PP1_vector <- pprdirections[,"term 1"]
   PP2_vector <- pprdirections[,"term 2"]
 
@@ -82,14 +88,14 @@ PPR_LDA <- function(DF=df, exclude=c("Identifier"), include=FALSE, LDA=FALSE, FI
       New_df,
       df.ppr,
       df.lda,
-      directions,
+      pprdirections,
       df,lda$scaling
     ))
   } else if (LDA == FALSE) {
     return(list(
       New_df,
       df.ppr,
-      directions.
+      pprdirections
     ))
   }
 }
@@ -104,7 +110,7 @@ TPS_landscape <- function(DF=df, VarName1="PP1", VarName2="PP2", output="contour
   tp.m <- as.matrix(data.frame(v1=Var1, v2=Var2))
   t <- fields::Tps(x=tp.m, Y=Fitness,lambda=0.02691373)
 
-  if (output=="plotly") return(plotly::plot_ly(z=~predictSurface(t)$z) %>% plotly::add_surface())
+  if (output=="plotly") return(plotly::plot_ly(z=~fields::predictSurface(t)$z) %>% plotly::add_surface())
   if (output=="contour") return(fields::surface(t, xlab=DispVar1, ylab=DispVar2,
                                         zlab=DispFitness))
   if (output=="wireframe") return(fields::surface(t, xlab=DispVar1, ylab=DispVar2,
@@ -114,7 +120,7 @@ TPS_landscape <- function(DF=df, VarName1="PP1", VarName2="PP2", output="contour
 }
 
 # Creates a 2D frequency-binning
-binCounts <- function(x,y,increment_x,increment_y) {
+binCounts <- function(x,y,increment_x,increment_y, pdf=FALSE) {
   x_seq <- seq(min(x),max(x),increment_x)
   y_seq <- seq(min(y),max(y),increment_y)
   counts <- expand.grid(x=x_seq, y=y_seq)
@@ -128,14 +134,17 @@ binCounts <- function(x,y,increment_x,increment_y) {
     }
   }
   colnames(counts) <- c("x","y","counts")
+  if (pdf) {
+    counts$counts <- counts$counts/sum(counts$counts)
+  }
   return(counts)
 }
 
 # Creates a TPS density surface based on a binning
-TPS_distribution <- function(DF=df,x="PP1",y="PP2",output,x_divisor=2,y_divisor=2,Theta=30,Phi=30) {
+TPS_distribution <- function(DF=df,x="PP1",y="PP2",output,x_divisor=2,y_divisor=2,Theta=30,Phi=30,pdf=FALSE) {
   x_axis <- DF[,x]
   y_axis <- DF[,x]
-  return(TPS_landscape(binCounts(x_axis, y_axis, increment_x=sd(x_axis)/3, increment_y=sd(y_axis)/3),
+  return(TPS_landscape(binCounts(x_axis, y_axis, increment_x=sd(x_axis)/3, increment_y=sd(y_axis)/3, pdf=pdf),
                        "x", "y", output, DispVar1=x, DispVar2=y,FitnessMetric="counts", DispFitness="Frequency"))
 }
 
