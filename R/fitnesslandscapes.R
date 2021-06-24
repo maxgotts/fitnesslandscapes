@@ -103,12 +103,17 @@ PPR_LDA <- function(DF=df, exclude=c("Identifier"), include=FALSE, LDA=FALSE, FI
 
 
 # Returns a fitness landscape given specific parameters
-TPS_landscape <- function(DF=df, VarName1="PP1", VarName2="PP2", output="contour", Theta=30, Phi=30, FitnessMetric="Fitness", DispVar1=VarName1, DispVar2=VarName2, DispFitness=FitnessMetric) {
+TPS_landscape <- function(DF=df, VarName1="PP1", VarName2="PP2", output="contour", Theta=30, Phi=30, FitnessMetric="Fitness", DispVar1=VarName1, DispVar2=VarName2, DispFitness=FitnessMetric, Lambda=0.02691373) {
   Var1 <- DF[,VarName1]
   Var2 <- DF[,VarName2]
   Fitness <- DF[,FitnessMetric]
   tp.m <- as.matrix(data.frame(v1=Var1, v2=Var2))
-  t <- fields::Tps(x=tp.m, Y=Fitness,lambda=0.02691373)
+
+  if (Lambda == "default") {
+    t <- fields::Tps(x=tp.m, Y=Fitness)
+  } else {
+    t <- fields::Tps(x=tp.m, Y=Fitness,lambda=Lambda)
+  }
 
   if (output=="plotly") return(plotly::plot_ly(z=~fields::predictSurface(t)$z) %>% plotly::add_surface())
   if (output=="contour") return(fields::surface(t, xlab=DispVar1, ylab=DispVar2,
