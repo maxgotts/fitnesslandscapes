@@ -62,7 +62,7 @@ PPR_LDA <- function(DF=df, exclude=c("Identifier"), include=FALSE, LDA=FALSE, FI
     if (LDA != FALSE) {
       LD1 <- c(LD1, dotprod(df.lda$scaling[,"LD1"],DF[row,]))
       if (length(df.lda$scaling)>1) {
-        LD2 <- c(LD2, dotprod(df.lda$scaling[,"LD2"],DF[row,]))
+        # LD2 <- c(LD2, dotprod(df.lda$scaling[,"LD2"],DF[row,]))
       }
     }
   }
